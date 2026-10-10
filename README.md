@@ -25,7 +25,7 @@ A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square 
 
 1. 打开 DSH Web GUI → 侧边栏 **Plugins**
 2. **Add plugin** → 箭头 → **Install a third-party plugin**
-3. 粘贴仓库地址:`https://github.com/<your-name>/dsh-bird-bike` 并确认安装
+3. 粘贴仓库地址:`https://github.com/blackstar-baba/dsh-bird-bike` 并确认安装
 4. 装完即生效 —— 看屏幕底部 🐦🚲
 
 1. Open the DSH web GUI → **Plugins** in the sidebar
@@ -35,7 +35,7 @@ A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square 
 ### 方式二:手动 link 本地克隆
 
 ```bash
-git clone https://github.com/<your-name>/dsh-bird-bike.git
+git clone https://github.com/blackstar-baba/dsh-bird-bike.git
 cd ~/.dsh/profiles/<your-profile>          # 例如 web
 pnpm add link:/absolute/path/to/dsh-bird-bike
 ```

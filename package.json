@@ -7,7 +7,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/<your-name>/dsh-bird-bike.git"
+    "url": "git+https://github.com/blackstar-baba/dsh-bird-bike.git"
   },
   "keywords": ["dsh", "deepseek-harness", "plugin", "pixel-art", "canvas"],
   "exports": {
