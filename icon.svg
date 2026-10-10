@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" shape-rendering="crispEdges">
+  <!-- 16x16 pixel grid, 4px cells: Minecraft-style chicken on a bike -->
+  <rect x="0" y="0" width="64" height="64" fill="#78a7ff"/>
+  <rect x="4" y="4" width="12" height="12" fill="#fceb9c"/>
+  <rect x="8" y="8" width="4" height="4" fill="#fff9db"/>
+  <rect x="40" y="4" width="16" height="4" fill="#ffffff"/>
+  <rect x="44" y="8" width="12" height="4" fill="#ffffff"/>
+  <rect x="0" y="52" width="64" height="4" fill="#7cbd51"/>
+  <rect x="0" y="56" width="64" height="8" fill="#79553a"/>
+  <rect x="12" y="56" width="4" height="4" fill="#5d4230"/>
+  <rect x="36" y="60" width="4" height="4" fill="#5d4230"/>
+  <rect x="52" y="56" width="4" height="4" fill="#5d4230"/>
+  <!-- rear wheel -->
+  <rect x="12" y="36" width="12" height="4" fill="#1e1e1e"/>
+  <rect x="8" y="40" width="4" height="12" fill="#1e1e1e"/>
+  <rect x="24" y="40" width="4" height="12" fill="#1e1e1e"/>
+  <rect x="12" y="52" width="12" height="4" fill="#1e1e1e"/>
+  <rect x="16" y="44" width="4" height="4" fill="#8a8a8a"/>
+  <!-- front wheel -->
+  <rect x="40" y="36" width="12" height="4" fill="#1e1e1e"/>
+  <rect x="36" y="40" width="4" height="12" fill="#1e1e1e"/>
+  <rect x="52" y="40" width="4" height="12" fill="#1e1e1e"/>
+  <rect x="40" y="52" width="12" height="4" fill="#1e1e1e"/>
+  <rect x="44" y="44" width="4" height="4" fill="#8a8a8a"/>
+  <!-- frame -->
+  <rect x="20" y="44" width="4" height="4" fill="#b02e26"/>
+  <rect x="24" y="40" width="16" height="4" fill="#b02e26"/>
+  <rect x="40" y="44" width="4" height="4" fill="#b02e26"/>
+  <rect x="24" y="36" width="4" height="4" fill="#4a3a2c"/>
+  <rect x="40" y="36" width="4" height="4" fill="#2a2a2a"/>
+  <!-- chicken -->
+  <rect x="16" y="28" width="4" height="4" fill="#ffffff"/>
+  <rect x="20" y="28" width="16" height="8" fill="#ffffff"/>
+  <rect x="20" y="36" width="12" height="4" fill="#ffffff"/>
+  <rect x="24" y="36" width="4" height="4" fill="#e2e2e2"/>
+  <rect x="32" y="20" width="8" height="8" fill="#ffffff"/>
+  <rect x="28" y="16" width="12" height="4" fill="#2a9d8f"/>
+  <rect x="32" y="12" width="4" height="4" fill="#2a9d8f"/>
+  <rect x="28" y="20" width="12" height="4" fill="#1f7a70"/>
+  <rect x="36" y="24" width="4" height="4" fill="#1a1a1a"/>
+  <rect x="40" y="24" width="4" height="4" fill="#e8992e"/>
+  <rect x="40" y="28" width="4" height="4" fill="#c43c3c"/>
+</svg>
