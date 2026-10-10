@@ -1,10 +1,13 @@
 # dsh-bird-bike 🐦🚲
 
+[![npm version](https://img.shields.io/npm/v/dsh-bird-bike)](https://www.npmjs.com/package/dsh-bird-bike)
+
 像素小鸡骑自行车 —— DeepSeek Harness(DSH)Web GUI 底部的我的世界像素风骑行带。
 A helmeted pixel chicken rides a bicycle along a Minecraft-style pixel strip docked at the bottom of the DSH (DeepSeek Harness) web GUI.
 
-<!-- 截图占位:发布时替换为截图 | Replace with a screenshot when publishing -->
-<!-- ![screenshot](docs/screenshot.png) -->
+![白天 · Day](assets/screenshot-day.png)
+
+![夜晚 · Night](assets/screenshot-night.png)
 
 ## 特性 / Features
 
@@ -24,6 +27,10 @@ A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square 
 ### 方式一:官方 CLI(推荐)
 
 ```sh
+# npm 包 / from npm
+dsh plugin --profile web add dsh-bird-bike
+
+# 或直接从 GitHub 安装 / or straight from GitHub
 dsh plugin --profile web add git+https://github.com/blackstar-baba/dsh-bird-bike.git
 ```
 
