@@ -21,7 +21,16 @@ A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square 
 
 ## 安装 / Install
 
-### 方式一:DSH 插件管理器(推荐)
+### 方式一:官方 CLI(推荐)
+
+```sh
+dsh plugin --profile web add git+https://github.com/blackstar-baba/dsh-bird-bike.git
+```
+
+纯 JavaScript、零构建、无 prepare 脚本 —— 安装时不会触发 pnpm 的 allowBuilds 构建授权。
+Plain JavaScript with no build step and no prepare script, so the install never triggers a pnpm allowBuilds prompt.
+
+### 方式二:DSH 插件管理器
 
 1. 打开 DSH Web GUI → 侧边栏 **Plugins**
 2. **Add plugin** → 箭头 → **Install a third-party plugin**
@@ -32,7 +41,7 @@ A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square 
 2. **Add plugin** → **Install a third-party plugin**
 3. Paste the repository URL and confirm — the strip appears at the bottom of the app frame
 
-### 方式二:手动 link 本地克隆
+### 方式三:手动 link 本地克隆
 
 ```bash
 git clone https://github.com/blackstar-baba/dsh-bird-bike.git
