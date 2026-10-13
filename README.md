@@ -82,8 +82,11 @@ Remove it from the **Plugins** page, or `pnpm remove dsh-bird-bike` inside the p
 
 ## 兼容性 / Compatibility
 
+**需要 DSH >= 0.2.1-alpha**(骑行带挂载的 `shell.bottom` 插槽自该版本起提供)。
+Requires **DSH >= 0.2.1-alpha** (the `shell.bottom` slot the strip mounts into shipped in that release).
+
 在 DSH 源码检出(source checkout)的 `web` profile 上开发测试(`dsh.client` platform: web,manifest 声明 `dsh.bundle`)。无 npm 依赖,仅依赖 Client 基线内置模块(react、slots)。
-Developed and tested on a DSH source checkout, `web` profile. No npm dependencies — only Client baseline builtins (react, slots).
+Requires **DSH >= 0.2.1-alpha** (see above). Developed on a DSH source checkout, `web` profile. No npm dependencies — only Client baseline builtins (react, slots).
 
 ## License
 
