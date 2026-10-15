@@ -120,6 +120,7 @@ window.__ModuleLoader__.load({
     const CYCLE = 80; // seconds per full day/night loop
     const FUSE = 1.5; // seconds from hiss to boom (MC creeper fuse)
     const TRIGGER_M = 2; // meters: range at which the creeper starts its fuse
+    const MOB_CAP = 3; // mobs allowed on stage at once (flung ones do not count)
 
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
     function hash(n) {
@@ -210,8 +211,8 @@ window.__ModuleLoader__.load({
       let raf = 0; let last = performance.now(); let statTick = 0;
       const dust = []; const notes = []; const clouds = []; const stars = [];
       let activeK = -1; let active = null;
-      let mob = null;      // at most one mob on stage
-      let mobTimer = 14;   // seconds until the next spawn attempt
+      const mobs = [];     // live mobs, up to MOB_CAP
+      let mobTimer = 10;   // seconds until the next spawn attempt
 
       /* Active palette, memoized per quantized night step. */
       function palette(k) {
@@ -328,10 +329,17 @@ window.__ModuleLoader__.load({
       /* ---------------- mobs ---------------- */
       function spawnMob() {
         const day = st.k < 0.5;
-        mob = day
-          ? { kind: 'creeper', gap: (TRIGGER_M + 0.6) * 14 * A, fuse: -1, walk: 0 }
-          : { kind: 'zombie', gap: (5 + Math.random() * 3) * 14 * A, walk: 0, flung: null };
-        mobTimer = 10 + Math.random() * 10;
+        let gap = day
+          ? (TRIGGER_M + 0.6) * 14 * A
+          : (5 + Math.random() * 3) * 14 * A;
+        for (let t = 0; t < 4; t++) { // stagger: keep 1.2m clear of every live mob
+          if (!mobs.some((m) => Math.abs(m.gap - gap) < 1.2 * 14 * A)) break;
+          gap += 1.5 * 14 * A;
+        }
+        mobs.push(day
+          ? { kind: 'creeper', gap, fuse: -1, walk: 0 }
+          : { kind: 'zombie', gap, walk: 0, flung: null });
+        mobTimer = 4 + Math.random() * 4;
       }
 
       function explodeCreeper(x) {
@@ -345,11 +353,10 @@ window.__ModuleLoader__.load({
         }
         st.blastStart = st.t;
         st.shake = 0.35;
-        mob = null;
       }
 
-      function flingZombie(x) {
-        mob.flung = {
+      function flingZombie(m, x) {
+        m.flung = {
           x, y: groundY - 5,
           vx: st.speed * 0.55 + 55, vy: -95,
           rot: 0, vr: 9 + Math.random() * 4,
@@ -367,29 +374,31 @@ window.__ModuleLoader__.load({
       function updateMobs(dt, speed, riderX) {
         st.shake = Math.max(0, st.shake - dt);
         if (!reduced) {
-          if (!mob) {
+          const live = mobs.filter((m) => !(m.kind === 'zombie' && m.flung)).length;
+          if (live < MOB_CAP) {
             mobTimer -= dt;
             if (mobTimer <= 0) spawnMob();
           }
         }
-        if (!mob) return;
-        if (mob.kind === 'creeper') {
-          if (mob.fuse < 0 && mob.gap <= TRIGGER_M * 14 * A) mob.fuse = 0;
-          if (mob.fuse >= 0) mob.fuse += dt;
-          mob.gap -= (speed + 10) * dt; // shambles toward the rider
-          mob.walk += dt;
-          if (mob.fuse >= FUSE || mob.gap <= 0.4 * 14 * A) {
-            explodeCreeper(riderX + Math.max(0, mob.gap));
-          }
-        } else {
-          if (mob.flung) {
-            const f = mob.flung;
+        for (let i = mobs.length - 1; i >= 0; i--) {
+          const m = mobs[i];
+          if (m.kind === 'creeper') {
+            if (m.fuse < 0 && m.gap <= TRIGGER_M * 14 * A) m.fuse = 0;
+            if (m.fuse >= 0) m.fuse += dt;
+            m.gap -= (speed + 10) * dt; // shambles toward the rider
+            m.walk += dt;
+            if (m.fuse >= FUSE || m.gap <= 0.4 * 14 * A) {
+              explodeCreeper(riderX + Math.max(0, m.gap));
+              mobs.splice(i, 1);
+            }
+          } else if (m.flung) {
+            const f = m.flung;
             f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 320 * dt; f.rot += f.vr * dt;
-            if (f.y > groundY + 12 || f.x > artW + 16) mob = null;
+            if (f.y > groundY + 12 || f.x > artW + 16) mobs.splice(i, 1);
           } else {
-            mob.gap -= (speed + 9) * dt; // shuffles toward the rider
-            mob.walk += dt;
-            if (mob.gap <= 0.4 * 14 * A) flingZombie(riderX + Math.max(0, mob.gap));
+            m.gap -= (speed + 9) * dt; // shuffles toward the rider
+            m.walk += dt;
+            if (m.gap <= 0.4 * 14 * A) flingZombie(m, riderX + Math.max(0, m.gap));
           }
         }
       }
@@ -407,17 +416,18 @@ window.__ModuleLoader__.load({
       }
 
       function drawMob(C, riderX) {
-        if (!mob) return;
+        if (!mobs.length) return;
         const ms = clamp(artH / 32, 0.55, 1.3); // mobs scale with the strip like the bike does
-        if (mob.kind === 'creeper') {
-          const x = Math.round(riderX + mob.gap);
+        for (const m of mobs) {
+        if (m.kind === 'creeper') {
+          const x = Math.round(riderX + m.gap);
           if (x < -12 * ms || x > artW + 12 * ms) return;
           let body = C.creeper; let shade = C.creeperShade;
-          if (mob.fuse >= 0) {
-            const rate = 0.08 + mob.fuse * 0.1; // flash quickens near the boom
-            if (Math.floor(mob.fuse / rate) % 2 === 0) { body = '#e9f2e7'; shade = '#c3d6bf'; }
+          if (m.fuse >= 0) {
+            const rate = 0.08 + m.fuse * 0.1; // flash quickens near the boom
+            if (Math.floor(m.fuse / rate) % 2 === 0) { body = '#e9f2e7'; shade = '#c3d6bf'; }
           }
-          const step = Math.floor((mob.walk || 0) * 2.5) % 2;
+          const step = Math.floor((m.walk || 0) * 2.5) % 2;
           rect(x - 6 * ms, groundY - 3 * ms, 3 * ms, 3 * ms, step ? shade : C.creeperLeg);   // back legs
           rect(x + 3 * ms, groundY - 3 * ms, 3 * ms, 3 * ms, step ? C.creeperLeg : shade);   // front legs
           rect(x - 7 * ms, groundY - 1 * ms, 4 * ms, 1 * ms, C.creeperLeg);                  // soles
@@ -430,18 +440,19 @@ window.__ModuleLoader__.load({
           rect(x - 4 * ms, groundY - 14 * ms, 2 * ms, 2 * ms, C.mobFace); // jaw sides
           rect(x + 2 * ms, groundY - 14 * ms, 2 * ms, 2 * ms, C.mobFace);
         } else {
-          if (mob.flung) {
-            const f = mob.flung;
+          if (m.flung) {
+            const f = m.flung;
             g.save();
             g.translate(f.x, f.y);
             g.rotate(f.rot);
             drawZombieBody(-2 * ms, 10 * ms, C, 0, ms);
             g.restore();
-            return;
+            continue;
           }
-          const x = Math.round(riderX + mob.gap);
-          if (x < -12 * ms || x > artW + 12 * ms) return;
-          drawZombieBody(x, groundY, C, Math.floor(mob.walk * 2.5) % 2, ms);
+          const x = Math.round(riderX + m.gap);
+          if (x < -12 * ms || x > artW + 12 * ms) continue;
+          drawZombieBody(x, groundY, C, Math.floor(m.walk * 2.5) % 2, ms);
+        }
         }
       }
 
