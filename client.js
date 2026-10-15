@@ -1,5 +1,5 @@
 /**
- * Client half of dsh-bird-bike — Minecraft pixel edition, day/night.
+ * Client half of dsh-bird-bike — Minecraft pixel edition, day/night + mobs.
  *
  * A little helmeted pixel chicken rides a bicycle along a full-width strip
  * docked at the bottom of the app frame. The strip mounts into `shell.bottom`,
@@ -21,14 +21,25 @@
  * discrete pixel-art color steps. The 🌙/☀️ button jumps to the other phase;
  * the cycle continues from there.
  *
+ * Mobs (hostile life, one at a time, spawned ahead of the rider):
+ * - Day creepers shuffle closer; entering the 2m trigger range starts the fuse —
+ *   the body flashes faster and faster — and the blast knocks the
+ *   bird into a forced super jump (no fail state, pure spectacle), with smoke
+ *   debris and a one-pixel screen shake.
+ * - Night zombies shuffle toward the rider with a two-frame walk; on contact
+ *   they are knocked flying: they tumble forward, spinning, and despawn
+ *   off-screen with a thud and a dust puff.
+ * Mobs live in rider-relative gap space (art px ahead), so the rider's world
+ * wrap never moves them. `prefers-reduced-motion` parks the ride: the world
+ * stops scrolling, mobs never spawn, one-shot interactions still animate.
+ *
  * Stats chip: distance, speed, and accumulated riding time (⏱) — time counts
  * only while the ride actually moves.
  *
  * Chrome colors come from the host theme tokens (square corners for the pixel
  * look); the canvas artwork uses its own literal palette by design (the
  * artwork exception, as in composer-globe). The strip collapses to a mini
- * rail; the choice persists in localStorage. `prefers-reduced-motion` parks
- * the ride: the world stops scrolling, one-shot interactions still animate.
+ * rail; the choice persists in localStorage.
  */
 window.__ModuleLoader__.load({
   id: 'dsh-bird-bike',
@@ -82,6 +93,9 @@ window.__ModuleLoader__.load({
       leg: '#e8992e', eye: '#1a1a1a',
       helmet: '#2a9d8f', helmetRim: '#1f7a70',
       dust: '#9c8a72',
+      creeper: '#52a04e', creeperShade: '#3f7f3c', creeperDark: '#2e5f2c', creeperLeg: '#1d3d1d', mobFace: '#161a16',
+      zombieSkin: '#4f8f4f', zombieShade: '#3a6f3a', zombieShirt: '#2e7d8a', zombiePants: '#35507f',
+      smoke: '#a8a8a0', smokeLight: '#d0d0c8',
     };
     const PAL_NIGHT = {
       sky: '#101636', skyLow: '#1a2150',
@@ -97,10 +111,15 @@ window.__ModuleLoader__.load({
       leg: '#c9842a', eye: '#1a1a1a',
       helmet: '#1f7a70', helmetRim: '#175c55',
       dust: '#6b6154',
+      creeper: '#3a6f3a', creeperShade: '#2c5629', creeperDark: '#1f4020', creeperLeg: '#0f230f', mobFace: '#0d0f0d',
+      zombieSkin: '#3a6f3a', zombieShade: '#2c5329', zombieShirt: '#1f5a66', zombiePants: '#27395c',
+      smoke: '#5c5c58', smokeLight: '#82827c',
     };
     const NOTE_COLORS = ['#e84ae8', '#4ae84a', '#e8e84a', '#4ae8e8', '#ffffff', '#e8992e'];
 
     const CYCLE = 80; // seconds per full day/night loop
+    const FUSE = 1.5; // seconds from hiss to boom (MC creeper fuse)
+    const TRIGGER_M = 2; // meters: range at which the creeper starts its fuse
 
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
     function hash(n) {
@@ -155,6 +174,7 @@ window.__ModuleLoader__.load({
     // Slightly chip-tune flavored bell and chirp.
     function bellSound() { tone(1319, 0, 0.12); tone(1760, 0.1, 0.16); tone(2093, 0.2, 0.22); }
     function chirp() { tone(1046, 0, 0.07, 'square', 0.1); tone(1568, 0.07, 0.1, 'square', 0.1); }
+    function thudSound() { tone(110, 0, 0.1, 'square', 0.16); tone(70, 0.05, 0.12, 'sine', 0.2); }
 
     /* ---------------- two-bone leg IK, knee forward ---------------- */
     function legIK(hx, hy, fx, fy, l1, l2) {
@@ -183,12 +203,15 @@ window.__ModuleLoader__.load({
         wheelAng: 0, crankAng: 0, jumpStart: -10, airborne: false,
         blinkAge: 99, blinkTimer: 2,
         cycleT: 0, k: 0, phaseReported: false,
+        blastStart: -10, shake: 0,
       };
       let w = 1; let h = 1; let P = 3; let artW = 1; let artH = 1;
       let groundY = 0; let A = 4.5; let pad = 40;
       let raf = 0; let last = performance.now(); let statTick = 0;
       const dust = []; const notes = []; const clouds = []; const stars = [];
       let activeK = -1; let active = null;
+      let mob = null;      // at most one mob on stage
+      let mobTimer = 14;   // seconds until the next spawn attempt
 
       /* Active palette, memoized per quantized night step. */
       function palette(k) {
@@ -291,6 +314,136 @@ window.__ModuleLoader__.load({
         return -Math.round(Math.min(10, 1.4 * A) * 4 * p * (1 - p));
       }
 
+      /* Creeper blast knock: taller and longer than a normal hop. */
+      function blastOffset() {
+        const p = (st.t - st.blastStart) / 0.9;
+        if (p <= 0 || p >= 1) return 0;
+        return -Math.round(Math.min(14, 2.4 * A) * 4 * p * (1 - p));
+      }
+
+      function riderScreenX() {
+        return ((st.dist % (artW + 2 * pad)) + artW + 2 * pad) % (artW + 2 * pad) - pad;
+      }
+
+      /* ---------------- mobs ---------------- */
+      function spawnMob() {
+        const day = st.k < 0.5;
+        mob = day
+          ? { kind: 'creeper', gap: (TRIGGER_M + 0.6) * 14 * A, fuse: -1, walk: 0 }
+          : { kind: 'zombie', gap: (5 + Math.random() * 3) * 14 * A, walk: 0, flung: null };
+        mobTimer = 10 + Math.random() * 10;
+      }
+
+      function explodeCreeper(x) {
+        for (let i = 0; i < 14; i++) {
+          dust.push({
+            x: x + (Math.random() - 0.5) * 5, y: groundY - 1 - Math.random() * 5,
+            vx: (Math.random() - 0.5) * 70, vy: -15 - Math.random() * 45,
+            age: 0, life: 0.5 + Math.random() * 0.4,
+            c: i % 3 === 0 ? active.smokeLight : active.smoke,
+          });
+        }
+        st.blastStart = st.t;
+        st.shake = 0.35;
+        mob = null;
+      }
+
+      function flingZombie(x) {
+        mob.flung = {
+          x, y: groundY - 5,
+          vx: st.speed * 0.55 + 55, vy: -95,
+          rot: 0, vr: 9 + Math.random() * 4,
+        };
+        for (let i = 0; i < 6; i++) {
+          dust.push({
+            x: x + (Math.random() - 0.5) * 3, y: groundY - 1,
+            vx: (Math.random() - 0.5) * 40, vy: -8 - Math.random() * 28,
+            age: 0, life: 0.4, c: active.dust,
+          });
+        }
+        thudSound();
+      }
+
+      function updateMobs(dt, speed, riderX) {
+        st.shake = Math.max(0, st.shake - dt);
+        if (!reduced) {
+          if (!mob) {
+            mobTimer -= dt;
+            if (mobTimer <= 0) spawnMob();
+          }
+        }
+        if (!mob) return;
+        if (mob.kind === 'creeper') {
+          if (mob.fuse < 0 && mob.gap <= TRIGGER_M * 14 * A) mob.fuse = 0;
+          if (mob.fuse >= 0) mob.fuse += dt;
+          mob.gap -= (speed + 10) * dt; // shambles toward the rider
+          mob.walk += dt;
+          if (mob.fuse >= FUSE || mob.gap <= 0.4 * 14 * A) {
+            explodeCreeper(riderX + Math.max(0, mob.gap));
+          }
+        } else {
+          if (mob.flung) {
+            const f = mob.flung;
+            f.x += f.vx * dt; f.y += f.vy * dt; f.vy += 320 * dt; f.rot += f.vr * dt;
+            if (f.y > groundY + 12 || f.x > artW + 16) mob = null;
+          } else {
+            mob.gap -= (speed + 9) * dt; // shuffles toward the rider
+            mob.walk += dt;
+            if (mob.gap <= 0.4 * 14 * A) flingZombie(riderX + Math.max(0, mob.gap));
+          }
+        }
+      }
+
+      function drawZombieBody(x, y, C, frame) {
+        // legs alternate with the walk cycle
+        if (frame) { rect(x - 4, y - 4, 2, 4, C.zombiePants); rect(x + 2, y - 4, 2, 4, C.zombieShade); }
+        else { rect(x - 4, y - 4, 2, 4, C.zombieShade); rect(x + 2, y - 4, 2, 4, C.zombiePants); }
+        rect(x - 4, y - 12, 8, 8, C.zombieShirt);  // torso
+        rect(x - 10, y - 12, 6, 2, C.zombieSkin);  // arms reaching toward the rider
+        rect(x - 4, y - 19, 8, 7, C.zombieSkin);   // head
+        rect(x - 4, y - 17, 2, 2, C.mobFace);      // eyes on the rider side
+        rect(x + 2, y - 17, 2, 2, C.mobFace);
+        rect(x - 1, y - 15, 2, 1, C.mobFace);      // mouth
+      }
+
+      function drawMob(C, riderX) {
+        if (!mob) return;
+        if (mob.kind === 'creeper') {
+          const x = Math.round(riderX + mob.gap);
+          if (x < -6 || x > artW + 6) return;
+          let body = C.creeper; let shade = C.creeperShade; const dark = C.creeperDark;
+          if (mob.fuse >= 0) {
+            const rate = 0.08 + mob.fuse * 0.1; // flash quickens near the boom
+            if (Math.floor(mob.fuse / rate) % 2 === 0) { body = '#e9f2e7'; shade = '#c3d6bf'; }
+          }
+          const step = Math.floor((mob.walk || 0) * 2.5) % 2;
+          rect(x - 6, groundY - 3, 3, 3, step ? shade : C.creeperLeg);   // back legs
+          rect(x + 3, groundY - 3, 3, 3, step ? C.creeperLeg : shade);   // front legs
+          rect(x - 7, groundY - 1, 4, 1, C.creeperLeg);                  // soles
+          rect(x + 3, groundY - 1, 4, 1, C.creeperLeg);
+          rect(x - 6, groundY - 20, 12, 16, body);   // body + head block
+          rect(x - 6, groundY - 7, 12, 2, shade);
+          rect(x - 6, groundY - 18, 4, 2, C.mobFace); // eyes
+          rect(x + 2, groundY - 18, 4, 2, C.mobFace);
+          rect(x - 2, groundY - 16, 4, 4, C.mobFace); // mouth drop
+          rect(x - 4, groundY - 14, 2, 2, C.mobFace); // jaw sides
+          rect(x + 2, groundY - 14, 2, 2, C.mobFace);
+        } else {
+          if (mob.flung) {
+            const f = mob.flung;
+            g.save();
+            g.translate(f.x, f.y);
+            g.rotate(f.rot);
+            drawZombieBody(-2, 10, C, 0);
+            g.restore();
+            return;
+          }
+          const x = Math.round(riderX + mob.gap);
+          if (x < -6 || x > artW + 6) return;
+          drawZombieBody(x, groundY, C, Math.floor(mob.walk * 2.5) % 2);
+        }
+      }
+
       function update(dt) {
         st.t += dt; st.blinkAge += dt;
         st.boost = Math.max(0, st.boost - dt * 0.5);
@@ -312,8 +465,8 @@ window.__ModuleLoader__.load({
         st.blinkTimer -= dt;
         if (st.blinkTimer <= 0) { st.blinkAge = 0; st.blinkTimer = 1.8 + Math.random() * 3; }
 
-        const riderX = ((st.dist % (artW + 2 * pad)) + artW + 2 * pad) % (artW + 2 * pad) - pad;
-        const off = jumpOffset();
+        const riderX = riderScreenX();
+        const off = Math.min(jumpOffset(), blastOffset());
         if (st.airborne && off === 0) {
           st.airborne = false;
           for (let i = 0; i < 8; i++) {
@@ -341,6 +494,8 @@ window.__ModuleLoader__.load({
             if (c.x < -c.wd - 4) { c.x = artW + 6; c.y = 2 + Math.random() * groundY * 0.35; }
           }
         }
+
+        updateMobs(dt, speed, riderX);
 
         if (onStats && ++statTick >= 20) {
           statTick = 0;
@@ -455,7 +610,7 @@ window.__ModuleLoader__.load({
       }
 
       function drawRider(x, C) {
-        const a = A; const hubY = groundY - a; const off = jumpOffset();
+        const a = A; const hubY = groundY - a; const off = Math.min(jumpOffset(), blastOffset());
         const lift = Math.min(1, Math.abs(off) / (1.4 * a + 1));
         g.globalAlpha = 0.2 * (1 - lift * 0.6);
         g.fillStyle = '#000';
@@ -556,16 +711,21 @@ window.__ModuleLoader__.load({
         const C = palette(st.k);
         drawBackground(C);
         drawGround(C);
-        const riderX = ((st.dist % (artW + 2 * pad)) + artW + 2 * pad) % (artW + 2 * pad) - pad;
+        const riderX = riderScreenX();
+        drawMob(C, riderX);
         drawRider(riderX, C);
         for (const p of dust) {
           const a2 = Math.max(0, 1 - p.age / p.life);
           if (a2 < 0.4 && Math.floor(st.t * 20) % 2 === 0) continue; // flicker out
           px(p.x, p.y, p.c);
         }
-        // upscale: one art pixel = P CSS pixels, nearest-neighbor
+        // upscale: one art pixel = P CSS pixels, nearest-neighbor; a blast adds
+        // a one-pixel jitter (scaled up slightly so no gap shows at the edges)
         vctx.imageSmoothingEnabled = false;
-        vctx.drawImage(art, 0, 0, artW, artH, 0, 0, artW * P, artH * P);
+        const jx = st.shake > 0 ? Math.round((Math.random() - 0.5) * 2) : 0;
+        const jy = st.shake > 0 ? Math.round((Math.random() - 0.5) * 2) : 0;
+        vctx.drawImage(art, 0, 0, artW, artH,
+          jx, jy, artW * P + Math.abs(jx) * 2, artH * P + Math.abs(jy) * 2);
       }
 
       function frame(now) {

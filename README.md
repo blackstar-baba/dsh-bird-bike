@@ -14,13 +14,14 @@ A helmeted pixel chicken rides a bicycle along a Minecraft-style pixel strip doc
 - 🐦 **像素小鸡骑士**:IK 反向动力学蹬腿、2 帧扑翅、会眨眼、戴蓝绿头盔
 - 🚲 **像素自行车**:辐条车轮、链条牙盘、踏板曲柄
 - 🌙 **昼夜循环**:约 80 秒一天,黄昏/黎明按 8 级色阶切换;夜晚有星星、方形月亮和车头灯光锥
+- 👾 **怪物出没**:白天苦力怕向你走来,接近到 2m 触发引信(闪烁加速预警),爆炸把小鸡炸上天空(自动超级跳,无惩罚);夜晚僵尸缓缓逼近,接触瞬间被撞飞(旋转飞出 + 闷响)
 - 🔔 **按铃**:芯片音叮铃 + MC 风彩色像素音符粒子 + 短暂加速冲刺(扬尘)
 - 🦘 **跳跃**:方块感小跳,落地扬尘
 - ⏱ **骑行统计**:里程 / 车速 / 骑行时长(仅实际骑行时累计),固定宽度等宽数字槽,不抖动
 - ▾ **可收起**:整条骑行带收成 40px 迷你车道,状态本地持久化
 - ♿ 尊重 `prefers-reduced-motion`:静止场景,交互仍可用
 
-A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square moon, headlight), chip-tune bell with note particles, jumps, and a fixed-width ride-stats chip. Collapsible to a mini rail; honors `prefers-reduced-motion`.
+A helmeted pixel chicken with IK-pedaled legs, a day/night cycle (stars, square moon, headlight), chip-tune bell with note particles, jumps, and a fixed-width ride-stats chip. Creepers roam by day and zombies by night. Collapsible to a mini rail; honors `prefers-reduced-motion`.
 
 ## 安装 / Install
 
