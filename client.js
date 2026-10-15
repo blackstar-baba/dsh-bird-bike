@@ -394,53 +394,54 @@ window.__ModuleLoader__.load({
         }
       }
 
-      function drawZombieBody(x, y, C, frame) {
+      function drawZombieBody(x, y, C, frame, ms) {
         // legs alternate with the walk cycle
-        if (frame) { rect(x - 4, y - 4, 2, 4, C.zombiePants); rect(x + 2, y - 4, 2, 4, C.zombieShade); }
-        else { rect(x - 4, y - 4, 2, 4, C.zombieShade); rect(x + 2, y - 4, 2, 4, C.zombiePants); }
-        rect(x - 4, y - 12, 8, 8, C.zombieShirt);  // torso
-        rect(x - 10, y - 12, 6, 2, C.zombieSkin);  // arms reaching toward the rider
-        rect(x - 4, y - 19, 8, 7, C.zombieSkin);   // head
-        rect(x - 4, y - 17, 2, 2, C.mobFace);      // eyes on the rider side
-        rect(x + 2, y - 17, 2, 2, C.mobFace);
-        rect(x - 1, y - 15, 2, 1, C.mobFace);      // mouth
+        if (frame) { rect(x - 4 * ms, y - 4 * ms, 2 * ms, 4 * ms, C.zombiePants); rect(x + 2 * ms, y - 4 * ms, 2 * ms, 4 * ms, C.zombieShade); }
+        else { rect(x - 4 * ms, y - 4 * ms, 2 * ms, 4 * ms, C.zombieShade); rect(x + 2 * ms, y - 4 * ms, 2 * ms, 4 * ms, C.zombiePants); }
+        rect(x - 4 * ms, y - 12 * ms, 8 * ms, 8 * ms, C.zombieShirt);  // torso
+        rect(x - 10 * ms, y - 12 * ms, 6 * ms, 2 * ms, C.zombieSkin);  // arms reaching toward the rider
+        rect(x - 4 * ms, y - 19 * ms, 8 * ms, 7 * ms, C.zombieSkin);   // head
+        rect(x - 4 * ms, y - 17 * ms, 2 * ms, 2 * ms, C.mobFace);      // eyes on the rider side
+        rect(x + 2 * ms, y - 17 * ms, 2 * ms, 2 * ms, C.mobFace);
+        rect(x - 1 * ms, y - 15 * ms, 2 * ms, 1 * ms, C.mobFace);      // mouth
       }
 
       function drawMob(C, riderX) {
         if (!mob) return;
+        const ms = clamp(artH / 32, 0.55, 1.3); // mobs scale with the strip like the bike does
         if (mob.kind === 'creeper') {
           const x = Math.round(riderX + mob.gap);
-          if (x < -6 || x > artW + 6) return;
-          let body = C.creeper; let shade = C.creeperShade; const dark = C.creeperDark;
+          if (x < -12 * ms || x > artW + 12 * ms) return;
+          let body = C.creeper; let shade = C.creeperShade;
           if (mob.fuse >= 0) {
             const rate = 0.08 + mob.fuse * 0.1; // flash quickens near the boom
             if (Math.floor(mob.fuse / rate) % 2 === 0) { body = '#e9f2e7'; shade = '#c3d6bf'; }
           }
           const step = Math.floor((mob.walk || 0) * 2.5) % 2;
-          rect(x - 6, groundY - 3, 3, 3, step ? shade : C.creeperLeg);   // back legs
-          rect(x + 3, groundY - 3, 3, 3, step ? C.creeperLeg : shade);   // front legs
-          rect(x - 7, groundY - 1, 4, 1, C.creeperLeg);                  // soles
-          rect(x + 3, groundY - 1, 4, 1, C.creeperLeg);
-          rect(x - 6, groundY - 20, 12, 16, body);   // body + head block
-          rect(x - 6, groundY - 7, 12, 2, shade);
-          rect(x - 6, groundY - 18, 4, 2, C.mobFace); // eyes
-          rect(x + 2, groundY - 18, 4, 2, C.mobFace);
-          rect(x - 2, groundY - 16, 4, 4, C.mobFace); // mouth drop
-          rect(x - 4, groundY - 14, 2, 2, C.mobFace); // jaw sides
-          rect(x + 2, groundY - 14, 2, 2, C.mobFace);
+          rect(x - 6 * ms, groundY - 3 * ms, 3 * ms, 3 * ms, step ? shade : C.creeperLeg);   // back legs
+          rect(x + 3 * ms, groundY - 3 * ms, 3 * ms, 3 * ms, step ? C.creeperLeg : shade);   // front legs
+          rect(x - 7 * ms, groundY - 1 * ms, 4 * ms, 1 * ms, C.creeperLeg);                  // soles
+          rect(x + 3 * ms, groundY - 1 * ms, 4 * ms, 1 * ms, C.creeperLeg);
+          rect(x - 6 * ms, groundY - 20 * ms, 12 * ms, 16 * ms, body);   // body + head block
+          rect(x - 6 * ms, groundY - 7 * ms, 12 * ms, 2 * ms, shade);
+          rect(x - 6 * ms, groundY - 18 * ms, 4 * ms, 2 * ms, C.mobFace); // eyes
+          rect(x + 2 * ms, groundY - 18 * ms, 4 * ms, 2 * ms, C.mobFace);
+          rect(x - 2 * ms, groundY - 16 * ms, 4 * ms, 4 * ms, C.mobFace); // mouth drop
+          rect(x - 4 * ms, groundY - 14 * ms, 2 * ms, 2 * ms, C.mobFace); // jaw sides
+          rect(x + 2 * ms, groundY - 14 * ms, 2 * ms, 2 * ms, C.mobFace);
         } else {
           if (mob.flung) {
             const f = mob.flung;
             g.save();
             g.translate(f.x, f.y);
             g.rotate(f.rot);
-            drawZombieBody(-2, 10, C, 0);
+            drawZombieBody(-2 * ms, 10 * ms, C, 0, ms);
             g.restore();
             return;
           }
           const x = Math.round(riderX + mob.gap);
-          if (x < -6 || x > artW + 6) return;
-          drawZombieBody(x, groundY, C, Math.floor(mob.walk * 2.5) % 2);
+          if (x < -12 * ms || x > artW + 12 * ms) return;
+          drawZombieBody(x, groundY, C, Math.floor(mob.walk * 2.5) % 2, ms);
         }
       }
 
