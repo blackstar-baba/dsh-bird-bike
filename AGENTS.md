@@ -34,3 +34,4 @@
 
 - 仓库:`/Users/blackstar/github/dsh-bird-bike`;本地预览副本:`~/.dsh/profiles/web/node_modules/dsh-bird-bike`(发布前可临时同步以预览,商店升级会覆盖为注册表版本)。
 - npm 缓存权限报错时,追加 `--cache /tmp/npm-cache-dsh`。
+- profile 的 `pnpm-workspace.yaml` 中,`minimumReleaseAgeExclude` 必须把同一包的多个版本合并为一条 `"name@v1 || v2"` 析构项(pnpm 11.7.0 的多条独立条目会静默失效,pnpm#12463);新发布版本升级前先把版本号加进对应析构项。
