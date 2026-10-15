@@ -549,9 +549,11 @@ window.__ModuleLoader__.load({
         const count = Math.ceil((artW + 2 * sp) / sp);
         for (let i = 0; i < count; i++) {
           const n = n0 + i;
-          const x = Math.round(n * sp + hash(n) * sp * 0.6 - scrolled);
-          if (x < -8 || x > artW + 8) continue;
-          const y = steppedHillY(x, factor, 4.5, 0.07, 1.5) + 1;
+          const wx = n * sp + hash(n) * sp * 0.6;      // true world position
+          const xs = wx - scrolled;                    // exact screen x
+          if (xs < -8 || xs > artW + 8) continue;
+          const y = steppedHillY(xs, factor, 4.5, 0.07, 1.5) + 1;  // sample the terrace at the exact world spot: no jitter
+          const x = Math.round(xs);
           rect(x - 1, y - 4, 2, 4, C.trunk);
           rect(x - 3, y - 8, 7, 4, C.leaf);
           rect(x - 2, y - 9, 5, 1, C.leaf);
