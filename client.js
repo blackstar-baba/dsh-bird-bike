@@ -28,7 +28,7 @@
  *   debris and a one-pixel screen shake.
  * - Night zombies shuffle toward the rider with a two-frame walk; on contact
  *   they are knocked flying: they tumble forward, spinning, and despawn
- *   off-screen with a thud and a dust puff.
+ *   off-screen with a dust puff.
  * Mobs live in rider-relative gap space (art px ahead), so the rider's world
  * wrap never moves them. `prefers-reduced-motion` parks the ride: the world
  * stops scrolling, mobs never spawn, one-shot interactions still animate.
@@ -175,7 +175,6 @@ window.__ModuleLoader__.load({
     // Slightly chip-tune flavored bell and chirp.
     function bellSound() { tone(1319, 0, 0.12); tone(1760, 0.1, 0.16); tone(2093, 0.2, 0.22); }
     function chirp() { tone(1046, 0, 0.07, 'square', 0.1); tone(1568, 0.07, 0.1, 'square', 0.1); }
-    function thudSound() { tone(110, 0, 0.1, 'square', 0.16); tone(70, 0.05, 0.12, 'sine', 0.2); }
 
     /* ---------------- two-bone leg IK, knee forward ---------------- */
     function legIK(hx, hy, fx, fy, l1, l2) {
@@ -368,7 +367,6 @@ window.__ModuleLoader__.load({
             age: 0, life: 0.4, c: active.dust,
           });
         }
-        thudSound();
       }
 
       function updateMobs(dt, speed, riderX) {
