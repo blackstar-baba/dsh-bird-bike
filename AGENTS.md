@@ -20,7 +20,7 @@
 
 ## 文档同步
 
-- `client.js` 行为有任何变更,必须同步更新:`README.md`、`locale/zh.json`、`locale/en.json`。
+- `client.js` 行为有任何变更,必须同步更新:`README.md`(英文,默认)、`README.zh-CN.md`(中文)、`locale/zh.json`、`locale/en.json`;两个 README 内容须保持对应。
 - 插件已收录进 awesome-dsh-plugin 时,还需同步条目描述;描述末尾保持 `Requires DSH <spec>.` / `需要 DSH <spec>。` 句式(市场兼容性标签由此解析)。
 - 文档与代码不一致会被收录评审打回。
 

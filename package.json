@@ -8,20 +8,37 @@
     "type": "git",
     "url": "git+https://github.com/blackstar-baba/dsh-bird-bike.git"
   },
-  "keywords": ["dsh", "deepseek-harness", "plugin", "pixel-art", "canvas"],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "pixel-art",
+    "canvas"
+  ],
   "exports": {
     ".": "./index.js",
     "./client": "./client.js",
     "./locale/*.json": "./locale/*.json",
     "./icon": "./icon.svg"
   },
-  "files": ["index.js", "client.js", "cordis.patch.yml", "locale/*.json", "icon.svg"],
+  "files": [
+    "README.zh-CN.md",
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg"
+  ],
   "dsh": {
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
       "immediately": true,
-      "inject": ["@deepseek-ai/dsh-client-ui-layout"]
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
     }
   }
 }
